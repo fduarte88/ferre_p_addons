@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Nueva Venta — Ferretería P{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'ventas:lista' %}">Ventas</a></li>
+<li class="breadcrumb-item active">Nueva Venta</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-cart-plus me-2 text-primary"></i>Nueva Venta</h4>
+    <a href="{% url 'ventas:lista' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Volver
+    </a>
+</div>
+
+<form id="formVenta" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="items" id="itemsInput">
+
+    <div class="row g-3">
+        <!-- Producto Search -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white border-0 fw-semibold">
+                    <i class="bi bi-search me-2 text-primary"></i>Agregar productos
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label small fw-semibold">Producto</label>
+                            <select id="selProducto" class="form-select">
+                                <option value="">Seleccione un producto...</option>
+                                {% for p in productos %}
+                                <option value="{{ p.id }}" data-precio="{{ p.precio_venta }}" data-stock="{{ p.stock }}" data-nombre="{{ p.nombre }}">
+                                    [{{ p.codigo }}] {{ p.nombre }} — ${{ p.precio_venta }} (Stock: {{ p.stock }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">Precio</label>
+                            <input type="number" id="inputPrecio" class="form-control" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">Cantidad</label>
+                            <input type="number" id="inputCantidad" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">Descuento</label>
+                            <input type="number" id="inputDescuento" class="form-control" value="0" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" id="btnAgregar" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 fw-semibold">
+                    <i class="bi bi-list-check me-2 text-primary"></i>Productos en la venta
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0" id="tablaItems">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end">Precio</th>
+                                    <th class="text-end">Desc.</th>
+                                    <th class="text-end">Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody">
+                                <tr id="emptyRow">
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="bi bi-cart me-2"></i>No hay productos agregados
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4" class="text-end fw-semibold">Subtotal:</td>
+                                    <td class="text-end fw-semibold" id="lblSubtotal">$0</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end">IVA (19%):</td>
+                                    <td class="text-end" id="lblIva">$0</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td colspan="4" class="text-end fs-5">TOTAL:</td>
+                                    <td class="text-end fs-5 text-success" id="lblTotal">$0</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Info -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 fw-semibold">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>Datos de la venta
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Cliente *</label>
+                        {{ form.cliente }}
+                        <a href="{% url 'ventas:crear_cliente' %}" class="small text-primary mt-1 d-inline-block" target="_blank">
+                            <i class="bi bi-person-plus me-1"></i>Nuevo cliente
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Método de Pago *</label>
+                        {{ form.metodo_pago }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Descuento global ($)</label>
+                        {{ form.descuento }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Observaciones</label>
+                        {{ form.observaciones }}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" id="btnGuardar">
+                            <i class="bi bi-check-circle me-2"></i>Registrar Venta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let items = [];
+
+const selProducto = document.getElementById('selProducto');
+const inputPrecio = document.getElementById('inputPrecio');
+const inputCantidad = document.getElementById('inputCantidad');
+const inputDescuento = document.getElementById('inputDescuento');
+
+selProducto.addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    if (opt.value) {
+        inputPrecio.value = opt.dataset.precio;
+    }
+});
+
+document.getElementById('btnAgregar').addEventListener('click', function() {
+    const opt = selProducto.options[selProducto.selectedIndex];
+    if (!opt.value) { alert('Seleccione un producto.'); return; }
+    const cantidad = parseInt(inputCantidad.value) || 1;
+    const precio = parseFloat(inputPrecio.value) || 0;
+    const descuento = parseFloat(inputDescuento.value) || 0;
+    const stock = parseInt(opt.dataset.stock);
+    if (cantidad > stock) { alert(`Stock insuficiente. Disponible: ${stock}`); return; }
+    const subtotal = (precio * cantidad) - descuento;
+    const idx = items.findIndex(i => i.producto_id == opt.value);
+    if (idx >= 0) {
+        items[idx].cantidad += cantidad;
+        items[idx].subtotal = (items[idx].precio * items[idx].cantidad) - items[idx].descuento;
+    } else {
+        items.push({
+            producto_id: opt.value,
+            nombre: opt.dataset.nombre,
+            cantidad, precio, descuento, subtotal
+        });
+    }
+    renderItems();
+    selProducto.value = '';
+    inputPrecio.value = '';
+    inputCantidad.value = 1;
+    inputDescuento.value = 0;
+});
+
+function renderItems() {
+    const tbody = document.getElementById('itemsBody');
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-cart me-2"></i>No hay productos agregados</td></tr>';
+        updateTotals(0);
+        return;
+    }
+    tbody.innerHTML = items.map((item, i) => `
+        <tr>
+            <td>${item.nombre}</td>
+            <td class="text-center">${item.cantidad}</td>
+            <td class="text-end">$${item.precio.toLocaleString('es-CO')}</td>
+            <td class="text-end">$${item.descuento.toLocaleString('es-CO')}</td>
+            <td class="text-end fw-semibold">$${item.subtotal.toLocaleString('es-CO')}</td>
+            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${i})"><i class="bi bi-trash"></i></button></td>
+        </tr>
+    `).join('');
+    const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
+    updateTotals(subtotal);
+}
+
+function updateTotals(subtotal) {
+    const iva = subtotal * 0.19;
+    document.getElementById('lblSubtotal').textContent = '$' + Math.round(subtotal).toLocaleString('es-CO');
+    document.getElementById('lblIva').textContent = '$' + Math.round(iva).toLocaleString('es-CO');
+    document.getElementById('lblTotal').textContent = '$' + Math.round(subtotal + iva).toLocaleString('es-CO');
+}
+
+function removeItem(i) {
+    items.splice(i, 1);
+    renderItems();
+}
+
+document.getElementById('formVenta').addEventListener('submit', function(e) {
+    if (items.length === 0) {
+        e.preventDefault();
+        alert('Debe agregar al menos un producto a la venta.');
+        return;
+    }
+    document.getElementById('itemsInput').value = JSON.stringify(items);
+});
+</script>
+{% endblock %}
