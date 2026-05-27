@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ferreteria_tags %}
 
 {% block title %}{{ titulo }} — Ferretería P{% endblock %}
 {% block breadcrumb %}
@@ -21,7 +22,13 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Código *</label>
+                    {% if es_nuevo %}
+                    <input type="text" class="form-control bg-light"
+                           name="codigo" id="{{ form.codigo.id_for_label }}"
+                           value="{{ form.codigo.value }}" readonly>
+                    {% else %}
                     {{ form.codigo }}
+                    {% endif %}
                 </div>
                 <div class="col-md-8">
                     <label class="form-label fw-semibold">Nombre *</label>
@@ -33,7 +40,13 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Categoría *</label>
-                    {{ form.categoria }}
+                    <div class="input-group">
+                        {{ form.categoria }}
+                        <a href="{% url 'productos:crear_categoria' %}?next={{ request.path }}"
+                           class="btn btn-success" title="Nueva categoría">
+                            <i class="bi bi-plus-lg"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Unidad</label>
@@ -44,16 +57,16 @@
                     {{ form.imagen }}
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold">Precio de compra</label>
+                    <label class="form-label fw-semibold">Costo</label>
                     <div class="input-group">
-                        <span class="input-group-text">$</span>
+                        <span class="input-group-text">Gs.</span>
                         {{ form.precio_compra }}
                     </div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Precio de venta *</label>
                     <div class="input-group">
-                        <span class="input-group-text">$</span>
+                        <span class="input-group-text">Gs.</span>
                         {{ form.precio_venta }}
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ferreteria_tags %}
 
 {% block title %}Productos — Ferretería P{% endblock %}
 {% block breadcrumb %}
@@ -62,7 +63,7 @@
                             {% if p.descripcion %}<div class="text-muted small">{{ p.descripcion|truncatechars:50 }}</div>{% endif %}
                         </td>
                         <td><span class="badge bg-secondary">{{ p.categoria.nombre }}</span></td>
-                        <td class="text-end fw-semibold">${{ p.precio_venta|floatformat:0 }}</td>
+                        <td class="text-end fw-semibold">{{ p.precio_venta|guaranies }}</td>
                         <td class="text-center">
                             {% if p.bajo_stock %}
                             <span class="badge bg-danger">{{ p.stock }} {{ p.unidad }}</span>

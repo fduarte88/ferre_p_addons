@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ferreteria_tags %}
 
 {% block title %}{{ factura.numero }} — Ferretería P{% endblock %}
 {% block breadcrumb %}
@@ -93,8 +94,8 @@
                         <td>{{ forloop.counter }}</td>
                         <td>{{ d.producto.nombre }}</td>
                         <td class="text-center">{{ d.cantidad }}</td>
-                        <td class="text-end">${{ d.precio_unitario|floatformat:0 }}</td>
-                        <td class="text-end">${{ d.subtotal|floatformat:0 }}</td>
+                        <td class="text-end">{{ d.precio_unitario|guaranies }}</td>
+                        <td class="text-end">{{ d.subtotal|guaranies }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -108,21 +109,21 @@
                 <table class="table table-borderless mb-0">
                     <tr>
                         <td class="text-end">Subtotal:</td>
-                        <td class="text-end fw-semibold">${{ factura.subtotal|floatformat:0 }}</td>
+                        <td class="text-end fw-semibold">{{ factura.subtotal|guaranies }}</td>
                     </tr>
-                    <tr>
-                        <td class="text-end">IVA (19%):</td>
-                        <td class="text-end">${{ factura.impuesto|floatformat:0 }}</td>
+                    <tr class="text-muted small">
+                        <td class="text-end">IVA 10%:</td>
+                        <td class="text-end">{{ factura.impuesto|guaranies }}</td>
                     </tr>
                     {% if factura.descuento %}
                     <tr>
                         <td class="text-end">Descuento:</td>
-                        <td class="text-end text-danger">-${{ factura.descuento|floatformat:0 }}</td>
+                        <td class="text-end text-danger">- {{ factura.descuento|guaranies }}</td>
                     </tr>
                     {% endif %}
                     <tr class="border-top">
                         <td class="text-end fw-bold fs-5">TOTAL:</td>
-                        <td class="text-end fw-bold fs-5 text-success">${{ factura.total|floatformat:0 }}</td>
+                        <td class="text-end fw-bold fs-5 text-success">{{ factura.total|guaranies }}</td>
                     </tr>
                 </table>
             </div>

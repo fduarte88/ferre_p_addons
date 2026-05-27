@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ferreteria_tags %}
 
 {% block title %}Dashboard — Ferretería P{% endblock %}
 {% block breadcrumb %}<li class="breadcrumb-item active">Dashboard</li>{% endblock %}
@@ -59,7 +60,7 @@
                     </div>
                     <div>
                         <div class="text-muted small">Total ventas mes</div>
-                        <div class="fw-bold fs-4">${{ total_ventas_mes|floatformat:0 }}</div>
+                        <div class="fw-bold fs-4">{{ total_ventas_mes|guaranies }}</div>
                     </div>
                 </div>
             </div>
@@ -110,7 +111,7 @@
                                 <td><a href="{% url 'ventas:detalle' venta.pk %}" class="fw-semibold text-decoration-none">#{{ venta.pk }}</a></td>
                                 <td>{{ venta.cliente.nombre }}</td>
                                 <td class="text-muted small">{{ venta.fecha|date:"d/m/Y H:i" }}</td>
-                                <td class="text-end fw-semibold">${{ venta.total|floatformat:0 }}</td>
+                                <td class="text-end fw-semibold">{{ venta.total|guaranies }}</td>
                                 <td>
                                     {% if venta.estado == 'completada' %}
                                     <span class="badge bg-success">Completada</span>
@@ -160,7 +161,7 @@
         <div class="card border-0 shadow-sm mt-3">
             <div class="card-body text-center">
                 <div class="text-muted small mb-1">Total facturado este mes</div>
-                <div class="fw-bold fs-2 text-success">${{ total_facturado_mes|floatformat:0 }}</div>
+                <div class="fw-bold fs-2 text-success">{{ total_facturado_mes|guaranies }}</div>
             </div>
         </div>
     </div>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ferreteria_tags %}
 
 {% block title %}Venta #{{ venta.pk }} — Ferretería P{% endblock %}
 {% block breadcrumb %}
@@ -78,29 +79,29 @@
                             <tr>
                                 <td>{{ d.producto.nombre }}</td>
                                 <td class="text-center">{{ d.cantidad }}</td>
-                                <td class="text-end">${{ d.precio_unitario|floatformat:0 }}</td>
-                                <td class="text-end fw-semibold">${{ d.subtotal|floatformat:0 }}</td>
+                                <td class="text-end">{{ d.precio_unitario|guaranies }}</td>
+                                <td class="text-end fw-semibold">{{ d.subtotal|guaranies }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
                                 <td colspan="3" class="text-end">Subtotal</td>
-                                <td class="text-end">${{ venta.subtotal|floatformat:0 }}</td>
+                                <td class="text-end">{{ venta.subtotal|guaranies }}</td>
                             </tr>
-                            <tr>
-                                <td colspan="3" class="text-end">IVA (19%)</td>
-                                <td class="text-end">${{ venta.impuesto|floatformat:0 }}</td>
+                            <tr class="text-muted small">
+                                <td colspan="3" class="text-end">IVA 10%</td>
+                                <td class="text-end">{{ venta.impuesto|guaranies }}</td>
                             </tr>
                             {% if venta.descuento %}
                             <tr>
                                 <td colspan="3" class="text-end">Descuento</td>
-                                <td class="text-end text-danger">-${{ venta.descuento|floatformat:0 }}</td>
+                                <td class="text-end text-danger">- {{ venta.descuento|guaranies }}</td>
                             </tr>
                             {% endif %}
                             <tr class="fw-bold">
                                 <td colspan="3" class="text-end fs-5">TOTAL</td>
-                                <td class="text-end fs-5 text-success">${{ venta.total|floatformat:0 }}</td>
+                                <td class="text-end fs-5 text-success">{{ venta.total|guaranies }}</td>
                             </tr>
                         </tfoot>
                     </table>

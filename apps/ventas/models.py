@@ -59,8 +59,9 @@ class Venta(models.Model):
 
     def calcular_totales(self):
         self.subtotal = sum(d.subtotal for d in self.detalles.all())
-        self.impuesto = self.subtotal * 19 / 100
-        self.total = self.subtotal + self.impuesto - self.descuento
+        # Precio incluye IVA 10% → IVA discriminado = subtotal × 10/110
+        self.impuesto = round(self.subtotal * 10 / 110, 2)
+        self.total = self.subtotal - self.descuento
         self.save()
 
 

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ferreteria_tags %}
 
 {% block title %}Ventas — Ferretería P{% endblock %}
 {% block breadcrumb %}<li class="breadcrumb-item active">Ventas</li>{% endblock %}
@@ -53,7 +54,7 @@
                         <td class="text-muted small">{{ v.vendedor.get_full_name|default:v.vendedor.username }}</td>
                         <td class="text-muted small">{{ v.fecha|date:"d/m/Y H:i" }}</td>
                         <td>{{ v.get_metodo_pago_display }}</td>
-                        <td class="text-end fw-semibold">${{ v.total|floatformat:0 }}</td>
+                        <td class="text-end fw-semibold">{{ v.total|guaranies }}</td>
                         <td class="text-center">
                             {% if v.estado == 'completada' %}<span class="badge bg-success">Completada</span>
                             {% elif v.estado == 'pendiente' %}<span class="badge bg-warning text-dark">Pendiente</span>

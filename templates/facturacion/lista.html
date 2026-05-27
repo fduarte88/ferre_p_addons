@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ferreteria_tags %}
 
 {% block title %}Facturas — Ferretería P{% endblock %}
 {% block breadcrumb %}<li class="breadcrumb-item active">Facturación</li>{% endblock %}
@@ -54,7 +55,7 @@
                         <td class="fw-semibold"><code>{{ f.numero }}</code></td>
                         <td>{{ f.venta.cliente.nombre|default:"—" }}</td>
                         <td class="text-muted small">{{ f.fecha|date:"d/m/Y H:i" }}</td>
-                        <td class="text-end fw-semibold">${{ f.total|floatformat:0 }}</td>
+                        <td class="text-end fw-semibold">{{ f.total|guaranies }}</td>
                         <td class="text-center">
                             {% if f.estado == 'pagada' %}<span class="badge bg-success">Pagada</span>
                             {% elif f.estado == 'pendiente' %}<span class="badge bg-warning text-dark">Pendiente</span>

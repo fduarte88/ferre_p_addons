@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ferreteria_tags %}
 
 {% block title %}{{ producto.nombre }} — Ferretería P{% endblock %}
 {% block breadcrumb %}
@@ -28,10 +29,10 @@
                     <dd class="col-sm-8"><span class="badge bg-secondary">{{ producto.categoria.nombre }}</span></dd>
                     <dt class="col-sm-4">Descripción</dt>
                     <dd class="col-sm-8">{{ producto.descripcion|default:"—" }}</dd>
-                    <dt class="col-sm-4">Precio compra</dt>
-                    <dd class="col-sm-8">${{ producto.precio_compra|floatformat:0 }}</dd>
+                    <dt class="col-sm-4">Costo</dt>
+                    <dd class="col-sm-8">{{ producto.precio_compra|guaranies }}</dd>
                     <dt class="col-sm-4">Precio venta</dt>
-                    <dd class="col-sm-8 fw-bold text-success">${{ producto.precio_venta|floatformat:0 }}</dd>
+                    <dd class="col-sm-8 fw-bold text-success">{{ producto.precio_venta|guaranies }}</dd>
                     <dt class="col-sm-4">Stock</dt>
                     <dd class="col-sm-8">
                         {% if producto.bajo_stock %}
