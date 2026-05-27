@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load ferreteria_tags %}
+
+{% block title %}Productos — Ferretería P{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Productos</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>Productos</h4>
+    <a href="{% url 'productos:crear' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Nuevo Producto
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o código..." value="{{ query }}">
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <select name="categoria" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.pk }}" {% if categoria_id == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+                <a href="{% url 'productos:lista' %}" class="btn btn-outline-secondary">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% if productos %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th class="text-end">Precio Venta</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos %}
+                    <tr>
+                        <td><code class="small">{{ p.codigo }}</code></td>
+                        <td>
+                            <div class="fw-semibold">{{ p.nombre }}</div>
+                            {% if p.descripcion %}<div class="text-muted small">{{ p.descripcion|truncatechars:50 }}</div>{% endif %}
+                        </td>
+                        <td><span class="badge bg-secondary">{{ p.categoria.nombre }}</span></td>
+                        <td class="text-end fw-semibold">{{ p.precio_venta|guaranies }}</td>
+                        <td class="text-center">
+                            {% if p.bajo_stock %}
+                            <span class="badge bg-danger">{{ p.stock }} {{ p.unidad }}</span>
+                            {% else %}
+                            <span class="badge bg-success">{{ p.stock }} {{ p.unidad }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'productos:detalle' p.pk %}" class="btn btn-outline-info" title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'productos:editar' p.pk %}" class="btn btn-outline-warning" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'productos:eliminar' p.pk %}" class="btn btn-outline-danger" title="Desactivar">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>No se encontraron productos.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

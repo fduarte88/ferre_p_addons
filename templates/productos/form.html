@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load ferreteria_tags %}
+
+{% block title %}{{ titulo }} — Ferretería P{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'productos:lista' %}">Productos</a></li>
+<li class="breadcrumb-item active">{{ titulo }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>{{ titulo }}</h4>
+    <a href="{% url 'productos:lista' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Volver
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Código *</label>
+                    {% if es_nuevo %}
+                    <input type="text" class="form-control bg-light"
+                           name="codigo" id="{{ form.codigo.id_for_label }}"
+                           value="{{ form.codigo.value }}" readonly>
+                    {% else %}
+                    {{ form.codigo }}
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">Nombre *</label>
+                    {{ form.nombre }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Categoría *</label>
+                    <div class="input-group">
+                        {{ form.categoria }}
+                        <a href="{% url 'productos:crear_categoria' %}?next={{ request.path }}"
+                           class="btn btn-success" title="Nueva categoría">
+                            <i class="bi bi-plus-lg"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Unidad</label>
+                    {{ form.unidad }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Imagen</label>
+                    {{ form.imagen }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Costo</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Gs.</span>
+                        {{ form.precio_compra }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Precio de venta *</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Gs.</span>
+                        {{ form.precio_venta }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Stock actual</label>
+                    {{ form.stock }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Stock mínimo</label>
+                    {{ form.stock_minimo }}
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form.activo }}
+                        <label class="form-check-label fw-semibold" for="{{ form.activo.id_for_label }}">Producto activo</label>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-2"></i>Guardar
+                </button>
+                <a href="{% url 'productos:lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

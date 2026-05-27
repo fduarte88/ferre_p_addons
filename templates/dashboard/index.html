@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load ferreteria_tags %}
+
+{% block title %}Dashboard — Ferretería P{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Dashboard</li>{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard</h4>
+    <span class="text-muted small">Hoy: {% now "d/m/Y" %}</span>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="kpi-icon bg-primary-subtle text-primary rounded-3 p-3 me-3">
+                        <i class="bi bi-box-seam fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Productos activos</div>
+                        <div class="fw-bold fs-3">{{ total_productos }}</div>
+                    </div>
+                </div>
+                {% if productos_bajo_stock %}
+                <div class="mt-2">
+                    <span class="badge bg-warning text-dark">
+                        <i class="bi bi-exclamation-triangle me-1"></i>{{ productos_bajo_stock }} bajo stock
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="kpi-icon bg-success-subtle text-success rounded-3 p-3 me-3">
+                        <i class="bi bi-cart-check fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Ventas hoy</div>
+                        <div class="fw-bold fs-3">{{ ventas_hoy }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="kpi-icon bg-info-subtle text-info rounded-3 p-3 me-3">
+                        <i class="bi bi-cash-stack fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total ventas mes</div>
+                        <div class="fw-bold fs-4">{{ total_ventas_mes|guaranies }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="kpi-icon bg-warning-subtle text-warning rounded-3 p-3 me-3">
+                        <i class="bi bi-receipt fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Facturas pendientes</div>
+                        <div class="fw-bold fs-3">{{ facturas_pendientes }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales & Quick Actions -->
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                <h6 class="fw-semibold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Últimas ventas</h6>
+                <a href="{% url 'ventas:lista' %}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+            </div>
+            <div class="card-body p-0">
+                {% if ultimas_ventas %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th class="text-end">Total</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for venta in ultimas_ventas %}
+                            <tr>
+                                <td><a href="{% url 'ventas:detalle' venta.pk %}" class="fw-semibold text-decoration-none">#{{ venta.pk }}</a></td>
+                                <td>{{ venta.cliente.nombre }}</td>
+                                <td class="text-muted small">{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                                <td class="text-end fw-semibold">{{ venta.total|guaranies }}</td>
+                                <td>
+                                    {% if venta.estado == 'completada' %}
+                                    <span class="badge bg-success">Completada</span>
+                                    {% elif venta.estado == 'pendiente' %}
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Anulada</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>No hay ventas registradas aún.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3 pb-0">
+                <h6 class="fw-semibold mb-0"><i class="bi bi-lightning me-2 text-warning"></i>Acciones rápidas</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'ventas:nueva' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Nueva Venta
+                    </a>
+                    <a href="{% url 'productos:crear' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-box-seam me-2"></i>Nuevo Producto
+                    </a>
+                    <a href="{% url 'ventas:crear_cliente' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-person-plus me-2"></i>Nuevo Cliente
+                    </a>
+                    <a href="{% url 'facturacion:lista' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-receipt me-2"></i>Ver Facturas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-body text-center">
+                <div class="text-muted small mb-1">Total facturado este mes</div>
+                <div class="fw-bold fs-2 text-success">{{ total_facturado_mes|guaranies }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

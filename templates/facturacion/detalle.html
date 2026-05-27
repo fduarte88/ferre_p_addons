@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load ferreteria_tags %}
+
+{% block title %}{{ factura.numero }} — Ferretería P{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'facturacion:lista' %}">Facturación</a></li>
+<li class="breadcrumb-item active">{{ factura.numero }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-receipt me-2 text-primary"></i>{{ factura.numero }}</h4>
+    <div class="d-flex gap-2">
+        <!-- Cambio de estado -->
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                Cambiar estado
+            </button>
+            <ul class="dropdown-menu">
+                {% for val, label in factura.ESTADOS %}
+                <li>
+                    <form method="post" action="{% url 'facturacion:estado' factura.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="estado" value="{{ val }}">
+                        <button type="submit" class="dropdown-item {% if factura.estado == val %}active{% endif %}">
+                            {{ label }}
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <a href="{% url 'facturacion:lista' %}" class="btn btn-outline-secondary">Volver</a>
+    </div>
+</div>
+
+<!-- Printable invoice area -->
+<div class="card border-0 shadow-sm" id="facturaImprimible">
+    <div class="card-body p-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-6">
+                <h2 class="fw-bold text-primary mb-0">Ferretería P</h2>
+                <p class="text-muted mb-0">Sistema de Gestión</p>
+            </div>
+            <div class="col-6 text-end">
+                <h3 class="fw-bold mb-1">FACTURA</h3>
+                <p class="mb-0"><strong>N°:</strong> <code>{{ factura.numero }}</code></p>
+                <p class="mb-0"><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y" }}</p>
+                <span class="badge {% if factura.estado == 'pagada' %}bg-success{% elif factura.estado == 'pendiente' %}bg-warning text-dark{% elif factura.estado == 'vencida' %}bg-danger{% else %}bg-secondary{% endif %} fs-6">
+                    {{ factura.get_estado_display }}
+                </span>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Client -->
+        {% if factura.venta %}
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h6 class="fw-semibold text-muted text-uppercase small">Facturar a</h6>
+                <div class="fw-bold">{{ factura.venta.cliente.nombre }}</div>
+                <div class="text-muted">{{ factura.venta.cliente.identificacion }}</div>
+                <div class="text-muted">{{ factura.venta.cliente.telefono }}</div>
+                <div class="text-muted">{{ factura.venta.cliente.email }}</div>
+                <div class="text-muted">{{ factura.venta.cliente.direccion }}</div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <h6 class="fw-semibold text-muted text-uppercase small">Venta relacionada</h6>
+                <a href="{% url 'ventas:detalle' factura.venta.pk %}" class="text-decoration-none">
+                    Venta #{{ factura.venta.pk }}
+                </a>
+                <div class="text-muted small">{{ factura.venta.fecha|date:"d/m/Y H:i" }}</div>
+                <div class="text-muted small">{{ factura.venta.get_metodo_pago_display }}</div>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <div class="table-responsive mb-4">
+            <table class="table border">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Descripción</th>
+                        <th class="text-center">Cant.</th>
+                        <th class="text-end">Precio Unit.</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in detalles %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ d.producto.nombre }}</td>
+                        <td class="text-center">{{ d.cantidad }}</td>
+                        <td class="text-end">{{ d.precio_unitario|guaranies }}</td>
+                        <td class="text-end">{{ d.subtotal|guaranies }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Totals -->
+        <div class="row justify-content-end">
+            <div class="col-md-5">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-end">Subtotal:</td>
+                        <td class="text-end fw-semibold">{{ factura.subtotal|guaranies }}</td>
+                    </tr>
+                    <tr class="text-muted small">
+                        <td class="text-end">IVA 10%:</td>
+                        <td class="text-end">{{ factura.impuesto|guaranies }}</td>
+                    </tr>
+                    {% if factura.descuento %}
+                    <tr>
+                        <td class="text-end">Descuento:</td>
+                        <td class="text-end text-danger">- {{ factura.descuento|guaranies }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="border-top">
+                        <td class="text-end fw-bold fs-5">TOTAL:</td>
+                        <td class="text-end fw-bold fs-5 text-success">{{ factura.total|guaranies }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        {% if factura.observaciones %}
+        <hr>
+        <p class="text-muted small"><strong>Observaciones:</strong> {{ factura.observaciones }}</p>
+        {% endif %}
+
+        <hr>
+        <p class="text-center text-muted small mb-0">Ferretería P — Gracias por su compra</p>
+    </div>
+</div>
+
+<div class="mt-3 text-end">
+    <button onclick="window.print()" class="btn btn-outline-primary">
+        <i class="bi bi-printer me-2"></i>Imprimir / PDF
+    </button>
+</div>
+{% endblock %}

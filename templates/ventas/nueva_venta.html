@@ -1,0 +1,531 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Nueva Venta — Ferretería P{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'ventas:lista' %}">Ventas</a></li>
+<li class="breadcrumb-item active">Nueva Venta</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-cart-plus me-2 text-primary"></i>Nueva Venta</h4>
+    <a href="{% url 'ventas:lista' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Volver
+    </a>
+</div>
+
+<form id="formVenta" method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="items" id="itemsInput">
+    <input type="hidden" name="cliente_id" id="clienteIdInput">
+
+    <!-- ① SECCIÓN CLIENTE ──────────────────────────────────── -->
+    <div class="card border-0 shadow-sm mb-3" id="cardCliente">
+        <div class="card-header bg-white border-0 pt-3 pb-2">
+            <span class="fw-semibold">
+                <i class="bi bi-person-check me-2 text-primary"></i>Datos del cliente
+            </span>
+        </div>
+        <div class="card-body">
+            <!-- Labels en una fila, inputs en la siguiente — garantiza alineación perfecta -->
+            <div class="row g-0 mb-1">
+                <div class="col-12 col-md-3">
+                    <label class="form-label fw-semibold mb-0 small">RUC / Código</label>
+                </div>
+                <div class="col-12 col-md-5 ps-md-2">
+                    <label class="form-label fw-semibold mb-0 small">Nombre del cliente</label>
+                </div>
+                <div class="col-12 col-md-4 ps-md-2" id="lblExtraHeader" style="display:none !important;">
+                    <label class="form-label fw-semibold mb-0 small">Contacto</label>
+                </div>
+            </div>
+
+            <div class="row g-2 align-items-center">
+
+                <!-- RUC -->
+                <div class="col-12 col-md-3">
+                    <div class="input-group">
+                        <input type="text" id="inputRuc" class="form-control"
+                               placeholder="Ej: 80012345-6" autocomplete="off"
+                               style="font-family: monospace; letter-spacing: .04em;"
+                               title="Ingrese el RUC y presione Enter o el botón buscar">
+                        <button type="button" id="btnBuscarCliente" class="btn btn-primary" title="Buscar cliente">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Nombre (auto-poblado) -->
+                <div class="col-12 col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                        <input type="text" id="inputNombreCliente" class="form-control bg-light"
+                               readonly placeholder="Se cargará automáticamente...">
+                        <button type="button" id="btnLimpiarCliente" class="btn btn-outline-secondary d-none" title="Cambiar cliente">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info adicional (email / tel) — visible solo tras encontrar cliente -->
+                <div class="col-12 col-md-4" id="infoClienteExtra" style="display:none !important;">
+                    <div class="d-flex gap-3 align-items-center flex-wrap">
+                        <span class="small text-muted text-truncate">
+                            <i class="bi bi-envelope me-1"></i><span id="lblClienteEmail">—</span>
+                        </span>
+                        <span class="small text-muted">
+                            <i class="bi bi-telephone me-1"></i><span id="lblClienteTel">—</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado: feedback debajo de los campos -->
+            <div id="clienteStatus" class="mt-2"></div>
+        </div>
+    </div>
+    <!-- /SECCIÓN CLIENTE -->
+
+    <!-- ② PRODUCTOS + DATOS DE VENTA ──────────────────────── -->
+    <div class="row g-3">
+
+        <!-- Izquierda: productos -->
+        <div class="col-12 col-lg-8">
+
+            <!-- ③ BUSCADOR DE PRODUCTO ── mismo estilo que cliente -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white border-0 pt-3 pb-2">
+                    <span class="fw-semibold">
+                        <i class="bi bi-box-seam me-2 text-primary"></i>Agregar producto
+                    </span>
+                </div>
+                <div class="card-body">
+
+                    <!-- Labels -->
+                    <div class="row g-0 mb-1">
+                        <div class="col-12 col-md-3">
+                            <label class="form-label fw-semibold mb-0 small">Código / Cód. de barra</label>
+                        </div>
+                        <div class="col-12 col-md-4 ps-md-2">
+                            <label class="form-label fw-semibold mb-0 small">Descripción del producto</label>
+                        </div>
+                        <div class="col-6 col-md-2 ps-md-2">
+                            <label class="form-label fw-semibold mb-0 small">Precio Gs.</label>
+                        </div>
+                        <div class="col-6 col-md-2 ps-md-2">
+                            <label class="form-label fw-semibold mb-0 small">Cantidad</label>
+                        </div>
+                        <div class="col-12 col-md-1"></div>
+                    </div>
+
+                    <!-- Inputs -->
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 col-md-3">
+                            <div class="input-group">
+                                <input type="text" id="inputCodigoProducto" class="form-control"
+                                       placeholder="Código o EAN..."
+                                       autocomplete="off"
+                                       style="font-family: monospace; letter-spacing: .04em;"
+                                       title="Ingrese código de producto o código de barras y presione Enter">
+                                <button type="button" id="btnBuscarProducto" class="btn btn-primary" title="Buscar producto">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-tag"></i></span>
+                                <input type="text" id="inputDescProducto" class="form-control bg-light"
+                                       readonly placeholder="Se cargará automáticamente...">
+                                <button type="button" id="btnLimpiarProducto" class="btn btn-outline-secondary d-none" title="Limpiar">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <input type="number" id="inputPrecio" class="form-control text-end"
+                                   step="1" min="0" placeholder="0" readonly>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <input type="number" id="inputCantidad" class="form-control text-center"
+                                   value="1" min="1" placeholder="1">
+                        </div>
+                        <div class="col-12 col-md-1">
+                            <button type="button" id="btnAgregar" class="btn btn-success w-100" title="Agregar a la venta">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Feedback de producto -->
+                    <div id="productoStatus" class="mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Tabla de ítems -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 fw-semibold">
+                    <i class="bi bi-list-check me-2 text-primary"></i>Productos en la venta
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end">Precio Gs.</th>
+                                    <th class="text-end">Subtotal Gs.</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="bi bi-cart me-2"></i>No hay productos agregados
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4" class="text-end fw-semibold">Subtotal:</td>
+                                    <td class="text-end fw-semibold" id="lblSubtotal">Gs. 0</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end text-muted small">IVA 10%:</td>
+                                    <td class="text-end text-muted small" id="lblIva">Gs. 0</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td colspan="4" class="text-end fs-5">TOTAL:</td>
+                                    <td class="text-end fs-5 text-success" id="lblTotal">Gs. 0</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Derecha: datos de la venta -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 fw-semibold">
+                    <i class="bi bi-receipt me-2 text-primary"></i>Datos de la venta
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Método de Pago *</label>
+                        {{ form.metodo_pago }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Descuento global (Gs.)</label>
+                        {{ form.descuento }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Observaciones</label>
+                        {{ form.observaciones }}
+                    </div>
+                    <hr>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" id="btnGuardar">
+                            <i class="bi bi-check-circle me-2"></i>Registrar Venta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ════════════════════════════════════════════════════════════════
+// Estado global
+// ════════════════════════════════════════════════════════════════
+let items = [];
+let clienteSeleccionado  = null;
+let productoSeleccionado = null;
+
+const URL_BUSCAR_CLIENTE  = "{% url 'ventas:buscar_cliente' %}";
+const URL_NUEVO_CLIENTE   = "{% url 'ventas:crear_cliente' %}";
+const URL_BUSCAR_PRODUCTO = "{% url 'productos:buscar_producto' %}";
+
+// ════════════════════════════════════════════════════════════════
+// Referencias DOM — Cliente
+// ════════════════════════════════════════════════════════════════
+const inputRuc          = document.getElementById('inputRuc');
+const btnBuscarCliente  = document.getElementById('btnBuscarCliente');
+const btnLimpiarCliente = document.getElementById('btnLimpiarCliente');
+const inputNombre       = document.getElementById('inputNombreCliente');
+const infoExtra         = document.getElementById('infoClienteExtra');
+const lblExtraHeader    = document.getElementById('lblExtraHeader');
+const clienteStatus     = document.getElementById('clienteStatus');
+const clienteIdInput    = document.getElementById('clienteIdInput');
+const lblEmail          = document.getElementById('lblClienteEmail');
+const lblTel            = document.getElementById('lblClienteTel');
+
+// ════════════════════════════════════════════════════════════════
+// Referencias DOM — Producto
+// ════════════════════════════════════════════════════════════════
+const inputCodigo    = document.getElementById('inputCodigoProducto');
+const btnBuscarProd  = document.getElementById('btnBuscarProducto');
+const btnLimpiarProd = document.getElementById('btnLimpiarProducto');
+const inputDescProd  = document.getElementById('inputDescProducto');
+const inputPrecio    = document.getElementById('inputPrecio');
+const inputCantidad  = document.getElementById('inputCantidad');
+const productoStatus = document.getElementById('productoStatus');
+const btnAgregar     = document.getElementById('btnAgregar');
+
+// ════════════════════════════════════════════════════════════════
+// Helpers
+// ════════════════════════════════════════════════════════════════
+function fmt(n) { return Math.round(n).toLocaleString('es-PY'); }
+
+function showToast(msg, type) {
+    type = type || 'info';
+    const el = document.createElement('div');
+    el.className = 'alert alert-' + type + ' alert-dismissible fade show position-fixed bottom-0 end-0 m-3';
+    el.style.zIndex = 9999;
+    el.innerHTML = msg + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    document.body.appendChild(el);
+    setTimeout(function() { bootstrap.Alert.getOrCreateInstance(el)?.close(); }, 3500);
+}
+
+function setSpinner(btn, on) {
+    btn.disabled = on;
+    btn.innerHTML = on
+        ? '<span class="spinner-border spinner-border-sm"></span>'
+        : '<i class="bi bi-search"></i>';
+}
+
+// ════════════════════════════════════════════════════════════════
+// CLIENTE
+// ════════════════════════════════════════════════════════════════
+function setClienteEncontrado(data) {
+    clienteSeleccionado  = data;
+    clienteIdInput.value = data.id;
+    inputNombre.value    = data.nombre;
+    lblEmail.textContent = data.email    || '—';
+    lblTel.textContent   = data.telefono || '—';
+    infoExtra.style.removeProperty('display');
+    lblExtraHeader.style.removeProperty('display');
+    btnLimpiarCliente.classList.remove('d-none');
+    inputRuc.classList.remove('is-invalid');
+    inputRuc.classList.add('is-valid');
+    inputNombre.classList.add('is-valid');
+    clienteStatus.innerHTML = '<span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>Cliente encontrado.</span>';
+}
+
+function setClienteNoEncontrado(ruc) {
+    clienteSeleccionado  = null;
+    clienteIdInput.value = '';
+    inputNombre.value    = '';
+    infoExtra.style.setProperty('display', 'none', 'important');
+    lblExtraHeader.style.setProperty('display', 'none', 'important');
+    btnLimpiarCliente.classList.add('d-none');
+    inputRuc.classList.remove('is-valid');
+    inputRuc.classList.add('is-invalid');
+    inputNombre.classList.remove('is-valid');
+    const qp = ruc ? '?ruc=' + encodeURIComponent(ruc) : '';
+    clienteStatus.innerHTML =
+        '<div class="alert alert-warning alert-dismissible py-2 mb-0 d-flex align-items-center gap-3">' +
+        '<i class="bi bi-person-x-fill fs-5"></i>' +
+        '<div class="flex-grow-1"><strong>Cliente no encontrado</strong> para RUC <code>' + ruc + '</code>. Puede registrarlo:</div>' +
+        '<a href="' + URL_NUEVO_CLIENTE + qp + '" target="_blank" class="btn btn-sm btn-warning text-nowrap"><i class="bi bi-person-plus me-1"></i>Dar de alta</a>' +
+        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+}
+
+function limpiarCliente() {
+    clienteSeleccionado  = null;
+    clienteIdInput.value = '';
+    inputRuc.value       = '';
+    inputNombre.value    = '';
+    infoExtra.style.setProperty('display', 'none', 'important');
+    lblExtraHeader.style.setProperty('display', 'none', 'important');
+    btnLimpiarCliente.classList.add('d-none');
+    inputRuc.classList.remove('is-valid', 'is-invalid');
+    inputNombre.classList.remove('is-valid', 'is-invalid');
+    clienteStatus.innerHTML = '';
+    inputRuc.focus();
+}
+
+async function buscarCliente() {
+    const ruc = inputRuc.value.trim();
+    if (!ruc) return;
+    setSpinner(btnBuscarCliente, true);
+    try {
+        const data = await fetch(URL_BUSCAR_CLIENTE + '?ruc=' + encodeURIComponent(ruc)).then(r => r.json());
+        data.found ? setClienteEncontrado(data) : setClienteNoEncontrado(ruc);
+    } catch(e) {
+        clienteStatus.innerHTML = '<span class="text-danger small"><i class="bi bi-wifi-off me-1"></i>Error de conexion.</span>';
+    } finally {
+        setSpinner(btnBuscarCliente, false);
+    }
+}
+
+btnBuscarCliente.addEventListener('click', buscarCliente);
+btnLimpiarCliente.addEventListener('click', limpiarCliente);
+inputRuc.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); buscarCliente(); } });
+inputRuc.addEventListener('input', function() {
+    if (clienteSeleccionado) limpiarCliente();
+    if (/\d+-\d/.test(this.value.trim())) {
+        clearTimeout(this._t);
+        this._t = setTimeout(buscarCliente, 600);
+    }
+});
+
+// ════════════════════════════════════════════════════════════════
+// PRODUCTO
+// ════════════════════════════════════════════════════════════════
+function setProductoEncontrado(data) {
+    productoSeleccionado = data;
+    inputDescProd.value  = data.descripcion;
+    inputPrecio.value    = Math.round(data.precio);
+    inputDescProd.classList.add('is-valid');
+    inputCodigo.classList.remove('is-invalid');
+    inputCodigo.classList.add('is-valid');
+    btnLimpiarProd.classList.remove('d-none');
+    productoStatus.innerHTML =
+        '<span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>' +
+        '<strong>' + data.nombre + '</strong> &mdash; Stock: <strong>' + data.stock + ' ' + data.unidad + '</strong></span>';
+    inputCantidad.focus();
+    inputCantidad.select();
+}
+
+function setProductoNoEncontrado(codigo) {
+    productoSeleccionado = null;
+    inputDescProd.value  = '';
+    inputPrecio.value    = '';
+    inputDescProd.classList.remove('is-valid');
+    inputCodigo.classList.remove('is-valid');
+    inputCodigo.classList.add('is-invalid');
+    btnLimpiarProd.classList.add('d-none');
+    productoStatus.innerHTML =
+        '<div class="alert alert-warning alert-dismissible py-2 mb-0 d-flex align-items-center gap-3">' +
+        '<i class="bi bi-box-x fs-5"></i>' +
+        '<div class="flex-grow-1"><strong>Producto no encontrado</strong> para codigo <code>' + codigo + '</code>.</div>' +
+        '<a href="{% url "productos:crear" %}" target="_blank" class="btn btn-sm btn-warning text-nowrap"><i class="bi bi-plus-circle me-1"></i>Crear producto</a>' +
+        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+}
+
+function limpiarProducto() {
+    productoSeleccionado = null;
+    inputCodigo.value    = '';
+    inputDescProd.value  = '';
+    inputPrecio.value    = '';
+    inputCantidad.value  = 1;
+    inputCodigo.classList.remove('is-valid', 'is-invalid');
+    inputDescProd.classList.remove('is-valid', 'is-invalid');
+    btnLimpiarProd.classList.add('d-none');
+    productoStatus.innerHTML = '';
+    inputCodigo.focus();
+}
+
+async function buscarProducto() {
+    const codigo = inputCodigo.value.trim();
+    if (!codigo) return;
+    setSpinner(btnBuscarProd, true);
+    try {
+        const data = await fetch(URL_BUSCAR_PRODUCTO + '?codigo=' + encodeURIComponent(codigo)).then(r => r.json());
+        data.found ? setProductoEncontrado(data) : setProductoNoEncontrado(codigo);
+    } catch(e) {
+        productoStatus.innerHTML = '<span class="text-danger small"><i class="bi bi-wifi-off me-1"></i>Error de conexion.</span>';
+    } finally {
+        setSpinner(btnBuscarProd, false);
+    }
+}
+
+btnBuscarProd.addEventListener('click', buscarProducto);
+btnLimpiarProd.addEventListener('click', limpiarProducto);
+inputCodigo.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); buscarProducto(); } });
+inputCodigo.addEventListener('input', function() { if (productoSeleccionado) limpiarProducto(); });
+inputCantidad.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); agregarItem(); } });
+
+// ════════════════════════════════════════════════════════════════
+// Agregar item
+// ════════════════════════════════════════════════════════════════
+function agregarItem() {
+    if (!productoSeleccionado) { showToast('Busque un producto primero.', 'warning'); inputCodigo.focus(); return; }
+    const cantidad = parseInt(inputCantidad.value) || 1;
+    const precio   = parseFloat(inputPrecio.value)  || 0;
+    if (cantidad < 1) { showToast('La cantidad debe ser mayor a 0.', 'warning'); return; }
+    if (cantidad > productoSeleccionado.stock) {
+        showToast('Stock insuficiente. Disponible: ' + productoSeleccionado.stock + ' ' + productoSeleccionado.unidad, 'danger');
+        return;
+    }
+    const subtotal = precio * cantidad;
+    const idx = items.findIndex(function(i) { return i.producto_id === productoSeleccionado.id; });
+    if (idx >= 0) {
+        items[idx].cantidad += cantidad;
+        items[idx].subtotal  = items[idx].precio * items[idx].cantidad;
+    } else {
+        items.push({ producto_id: productoSeleccionado.id, codigo: productoSeleccionado.codigo, nombre: productoSeleccionado.nombre, cantidad: cantidad, precio: precio, subtotal: subtotal });
+    }
+    renderItems();
+    limpiarProducto();
+}
+
+btnAgregar.addEventListener('click', agregarItem);
+
+// ════════════════════════════════════════════════════════════════
+// Tabla y totales
+// ════════════════════════════════════════════════════════════════
+function renderItems() {
+    const tbody = document.getElementById('itemsBody');
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-cart me-2"></i>No hay productos agregados</td></tr>';
+        updateTotals(0);
+        return;
+    }
+    tbody.innerHTML = items.map(function(item, i) {
+        return '<tr>' +
+            '<td><code class="small">' + item.codigo + '</code></td>' +
+            '<td>' + item.nombre + '</td>' +
+            '<td class="text-center">' + item.cantidad + '</td>' +
+            '<td class="text-end">Gs. ' + fmt(item.precio) + '</td>' +
+            '<td class="text-end fw-semibold">Gs. ' + fmt(item.subtotal) + '</td>' +
+            '<td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(' + i + ')" title="Quitar"><i class="bi bi-trash"></i></button></td>' +
+            '</tr>';
+    }).join('');
+    updateTotals(items.reduce(function(s, i) { return s + i.subtotal; }, 0));
+}
+
+function updateTotals(subtotal) {
+    // Precio con IVA incluido → IVA discriminado = subtotal × 10/110
+    const iva      = Math.round(subtotal * 10 / 110);
+    const descuento = parseFloat(document.getElementById('id_descuento')?.value) || 0;
+    const total    = Math.max(0, subtotal - descuento);
+    document.getElementById('lblSubtotal').textContent = 'Gs. ' + fmt(subtotal);
+    document.getElementById('lblIva').textContent      = 'Gs. ' + fmt(iva);
+    document.getElementById('lblTotal').textContent    = 'Gs. ' + fmt(total);
+}
+
+document.getElementById('id_descuento')?.addEventListener('input', function() {
+    updateTotals(items.reduce(function(s, i) { return s + i.subtotal; }, 0));
+});
+
+function removeItem(i) { items.splice(i, 1); renderItems(); }
+
+// ════════════════════════════════════════════════════════════════
+// Envio
+// ════════════════════════════════════════════════════════════════
+document.getElementById('formVenta').addEventListener('submit', function(e) {
+    let ok = true;
+    if (!clienteSeleccionado) {
+        inputRuc.classList.add('is-invalid');
+        clienteStatus.innerHTML = '<span class="text-danger small"><i class="bi bi-exclamation-circle me-1"></i>Debe seleccionar un cliente.</span>';
+        inputRuc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        ok = false;
+    }
+    if (items.length === 0) { showToast('Debe agregar al menos un producto.', 'danger'); ok = false; }
+    if (!ok) { e.preventDefault(); return; }
+    document.getElementById('itemsInput').value = JSON.stringify(items);
+});
+</script>
+{% endblock %}
