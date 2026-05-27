@@ -60,8 +60,8 @@
         <div class="row mb-4">
             <div class="col-md-6">
                 <h6 class="fw-semibold text-muted text-uppercase small">Facturar a</h6>
-                <div class="fw-bold">{{ factura.venta.cliente.nombre }}</div>
-                <div class="text-muted">{{ factura.venta.cliente.identificacion }}</div>
+                <div class="fw-bold">{{ factura.venta.cliente.nombre_completo }}</div>
+                <div class="text-muted">RUC: {{ factura.venta.cliente.ruc }}</div>
                 <div class="text-muted">{{ factura.venta.cliente.telefono }}</div>
                 <div class="text-muted">{{ factura.venta.cliente.email }}</div>
                 <div class="text-muted">{{ factura.venta.cliente.direccion }}</div>

@@ -4,9 +4,9 @@ from .models import Cliente, Venta, DetalleVenta
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'identificacion', 'tipo', 'telefono', 'activo')
+    list_display = ('nombre_completo', 'ruc', 'tipo', 'telefono', 'activo')
     list_filter = ('tipo', 'activo')
-    search_fields = ('nombre', 'identificacion')
+    search_fields = ('nombre', 'apellido', 'ruc')
 
 
 class DetalleVentaInline(admin.TabularInline):

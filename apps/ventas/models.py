@@ -5,25 +5,35 @@ from apps.productos.models import Producto
 
 class Cliente(models.Model):
     TIPOS = [
-        ('natural', 'Persona Natural'),
+        ('natural', 'Persona Física'),
         ('juridica', 'Persona Jurídica'),
     ]
     tipo = models.CharField(max_length=10, choices=TIPOS, default='natural')
-    nombre = models.CharField(max_length=200)
-    identificacion = models.CharField(max_length=20, unique=True)
-    telefono = models.CharField(max_length=20, blank=True)
-    email = models.EmailField(blank=True)
-    direccion = models.TextField(blank=True)
+    ruc = models.CharField(
+        max_length=20, unique=True,
+        verbose_name='RUC',
+        help_text='Formato Paraguay: XXXXXXXX-D',
+    )
+    nombre = models.CharField(max_length=100, verbose_name='Nombre')
+    apellido = models.CharField(max_length=100, blank=True, verbose_name='Apellido')
+    email = models.EmailField(blank=True, verbose_name='Correo electrónico')
+    telefono = models.CharField(max_length=20, blank=True, verbose_name='Teléfono')
+    direccion = models.TextField(blank=True, verbose_name='Dirección')
     activo = models.BooleanField(default=True)
     creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
-        ordering = ['nombre']
+        ordering = ['apellido', 'nombre']
+
+    @property
+    def nombre_completo(self):
+        return f'{self.nombre} {self.apellido}'.strip()
 
     def __str__(self):
-        return f'{self.nombre} ({self.identificacion})'
+        return f'{self.nombre_completo} (RUC: {self.ruc})'
 
 
 class Venta(models.Model):
